@@ -16,13 +16,20 @@ export default defineConfig({
     types: schemaTypes,
   },
 
-  document: {
-    productionUrl: async (prev, context) => {
-      const { document } = context
-      if (document._type === "project" && document.slug?.current) {
-        return `https://portfolio-jirka-frontend.vercel.app/projekty/${document.slug.current}`
-      }
-      return prev
-    },
+document: {
+  productionUrl: async (prev, context) => {
+    const doc = context.document as {
+      _type?: string
+      slug?: { current?: string }
+    }
+
+    const slug = doc.slug?.current
+
+    if (doc._type === "project" && slug) {
+      return `https://portfolio-jirka-vercel-project-git-main-jivesely1s-projects.vercel.app/projekty/${slug}`
+    }
+
+    return prev
   },
+},
 })
