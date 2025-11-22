@@ -1,222 +1,448 @@
-"use client"
+'use client';
 
-import { useEffect, useState } from "react"
-import Header from "../components/Header"
-import Footer from "../components/Footer"
-import ContactForm from "../components/ContactForm"
-import ProjectCard from "../components/ProjectCard"
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState, useCallback, useMemo, type MouseEvent } from "react";
+import { motion, type Variants } from "framer-motion";
+import type { CSSProperties } from "react";
+
 import {
   getProjects,
   getServices,
   getReferences,
   getSkills,
-} from "../lib/sanity.queries"
-import type {
-  SanityProject,
-  SanityService,
-  SanityReference,
-  SanitySkill,
-} from "../lib/types"
+  type SanityProject,
+  type SanityService,
+  type SanityReference,
+  type SanitySkill,
+} from "../lib/sanity";
+
+const NAV_LINKS = [
+  { href: "#uvod", label: "Úvod" },
+  { href: "#o-mne", label: "O mně" },
+  { href: "#dovednosti", label: "Dovednosti" },
+  { href: "#portfolio", label: "Portfolio" },
+  { href: "#sluzby", label: "Služby" },
+  { href: "#kontakt", label: "Kontakt" },
+];
+
+const SCROLL_OFFSET = 120;
+
+const fadeInVariants: Variants = {
+  initial: { opacity: 0, y: 50 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
+};
 
 export default function PortfolioPage() {
-  const [loading, setLoading] = useState(true)
-  const [projects, setProjects] = useState<SanityProject[]>([])
-  const [services, setServices] = useState<SanityService[]>([])
-  const [references, setReferences] = useState<SanityReference[]>([])
-  const [skills, setSkills] = useState<SanitySkill[]>([])
+  const [loading, setLoading] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("uvod");
 
+  const [projects, setProjects] = useState<SanityProject[]>([]);
+  const [services, setServices] = useState<SanityService[]>([]);
+  const [references, setReferences] = useState<SanityReference[]>([]);
+  const [skills, setSkills] = useState<SanitySkill[]>([]);
+
+  // Načtení dat z CMS
   useEffect(() => {
-    async function load() {
-      try {
-        const [p, s, r, sk] = await Promise.all([
-          getProjects(),
-          getServices(),
-          getReferences(),
-          getSkills(),
-        ])
-        setProjects(p)
-        setServices(s)
-        setReferences(r)
-        setSkills(sk)
-      } catch (e) {
-        console.error("Chyba při načítání dat ze Sanity:", e)
-      } finally {
-        setLoading(false)
+    const loadData = async () => {
+      const [p, s, r, sk] = await Promise.all([
+        getProjects(),
+        getServices(),
+        getReferences(),
+        getSkills(),
+      ]);
+      setProjects(p);
+      setServices(s);
+      setReferences(r);
+      setSkills(sk);
+      setLoading(false);
+    };
+    loadData();
+  }, []);
+
+  // Smooth scroll
+  const handleSmoothScroll = useCallback(
+    (e: MouseEvent<HTMLAnchorElement>) => {
+      const targetId = e.currentTarget.getAttribute("href")?.substring(1);
+      const target = targetId ? document.getElementById(targetId) : null;
+      if (target) {
+        e.preventDefault();
+        window.scrollTo({ top: target.offsetTop - SCROLL_OFFSET, behavior: "smooth" });
+        setIsMenuOpen(false);
       }
-    }
-    load()
-  }, [])
+    },
+    []
+  );
+
+  // Aktivní sekce podle scrollu
+  useEffect(() => {
+    const sections = document.querySelectorAll<HTMLElement>("section[id]");
+
+    const onScroll = () => {
+      let currentId = "";
+      const scrollY = window.scrollY + SCROLL_OFFSET + 10;
+
+      sections.forEach((el) => {
+        if (scrollY >= el.offsetTop && scrollY < el.offsetTop + el.offsetHeight) {
+          currentId = el.id;
+        }
+      });
+
+      setActiveSection(currentId || "uvod");
+    };
+
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Styl mobilního menu
+  const mobileMenuStyles = useMemo(
+    (): CSSProperties => ({
+      height: isMenuOpen ? "auto" : "0",
+      opacity: isMenuOpen ? 1 : 0,
+      pointerEvents: isMenuOpen ? "auto" : "none",
+    }),
+    [isMenuOpen]
+  );
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A]">
-      <Header />
-
-      <main className="mx-auto max-w-6xl px-4 pt-12 pb-24 space-y-24">
-
-        {/* HERO */}
-        <section
-          id="uvod"
-          className="flex flex-col-reverse gap-12 md:flex-row md:items-center"
+    <div className="font-sans text-gray-800 bg-gray-50 relative">
+      {/* Loading Overlay */}
+      {loading && (
+        <motion.div
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 0.8, delay: 1.5 }}
+          className="fixed inset-0 flex items-center justify-center bg-indigo-700 z-[100] text-white text-4xl font-extrabold"
         >
-          <div className="flex-1 space-y-6">
-            <p className="text-sm font-medium tracking-[0.2em] text-[#445B8C] uppercase">
-              Ahoj, jsem Jirka
-            </p>
+          <motion.span
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, repeat: Infinity, repeatType: "reverse" }}
+          >
+            Jirka Veselý 💻
+          </motion.span>
+        </motion.div>
+      )}
 
-            <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-              Tvořím moderní weby a aplikace,
-              <span className="block text-[#445B8C]">které posunou tvůj projekt.</span>
-            </h1>
+      {/* Navigace */}
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl shadow-lg border-b border-indigo-100">
+        <div className="max-w-6xl mx-auto flex justify-between items-center px-4 py-3 h-16">
+          <a
+            href="#uvod"
+            onClick={handleSmoothScroll}
+            className="text-xl sm:text-2xl font-extrabold text-indigo-700"
+          >
+            &lt;JirkaVeselý /&gt;
+          </a>
 
-            <p className="max-w-xl text-slate-600 text-base leading-relaxed">
-              Specializuji se na React / Next.js, headless CMS Sanity a tvorbu
-              digitálních řešení. Dodám ti profesionální prezentaci, kterou si
-              zvládneš snadno spravovat.
-            </p>
+          {/* Mobilní burger */}
+          <button
+            onClick={() => setIsMenuOpen((prev) => !prev)}
+            className="md:hidden text-3xl p-2 text-gray-700 hover:bg-indigo-100 rounded-lg"
+            aria-label="Otevřít menu"
+          >
+            {isMenuOpen ? "✕" : "☰"}
+          </button>
 
-            <div className="flex flex-wrap gap-4 pt-2">
+          {/* Desktop menu */}
+          <nav className="hidden md:flex gap-6 items-center">
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={handleSmoothScroll}
+                className={`transition-colors hover:text-indigo-600 ${
+                  activeSection === link.href.slice(1)
+                    ? "text-indigo-600 font-semibold"
+                    : "text-gray-700"
+                }`}
+              >
+                {link.label}
+              </a>
+            ))}
+            <a
+              href="#kontakt"
+              onClick={handleSmoothScroll}
+              className="ml-4 px-5 py-2 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700"
+            >
+              Spolupracujme
+            </a>
+          </nav>
+        </div>
+
+        {/* Mobilní menu */}
+        <nav
+          style={mobileMenuStyles}
+          className="md:hidden bg-white shadow-lg border-t border-indigo-100 overflow-hidden transition-all duration-300"
+        >
+          <div className="flex flex-col px-4 pt-2 pb-4 gap-2">
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={handleSmoothScroll}
+                className={`block py-2 px-2 rounded-lg ${
+                  activeSection === link.href.slice(1)
+                    ? "bg-indigo-100 text-indigo-700 font-semibold"
+                    : "text-gray-700 hover:bg-indigo-50"
+                }`}
+              >
+                {link.label}
+              </a>
+            ))}
+            <a
+              href="#kontakt"
+              onClick={handleSmoothScroll}
+              className="mt-2 block text-center px-4 py-2 bg-indigo-600 text-white rounded-full"
+            >
+              Mám zájem o web
+            </a>
+          </div>
+        </nav>
+      </header>
+
+      <main>
+        {/* Úvod */}
+        <motion.section
+          id="uvod"
+          className="bg-gradient-to-br from-indigo-50 to-white py-16 md:py-24 min-h-[75vh] flex items-center"
+          variants={fadeInVariants}
+          initial="initial"
+          whileInView="animate"
+        >
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-center px-4">
+            {/* Text */}
+            <div>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4 text-gray-900 leading-tight">
+                Váš <span className="text-indigo-600">Full-Stack</span> partner pro inovace
+              </h1>
+              <p className="text-base sm:text-lg mb-8 text-gray-600">
+                Přeměňuji nápady na výkonné webové aplikace s elegantním kódem a skvělým UX.
+              </p>
               <a
                 href="#kontakt"
-                className="rounded-full bg-[#445B8C] text-white px-6 py-3 text-sm font-medium shadow hover:bg-[#3b507b] transition"
+                onClick={handleSmoothScroll}
+                className="inline-block px-6 sm:px-8 py-3 bg-indigo-600 text-white text-lg font-bold rounded-full shadow-xl hover:bg-indigo-700"
               >
-                Domluvit konzultaci
-              </a>
-
-              <a
-                href="#portfolio"
-                className="rounded-full border border-[#445B8C] text-[#445B8C] px-6 py-3 text-sm font-medium hover:bg-[#445B8C]/10 transition"
-              >
-                Zobrazit projekty
+                Mám zájem o web
               </a>
             </div>
-          </div>
 
-          {/* Hero Card */}
-          <div className="flex-1">
-            <div className="relative mx-auto max-w-xs">
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#445B8C] to-[#8BA3C9] opacity-20 blur-xl" />
-              <div className="relative rounded-3xl bg-white border border-slate-200 p-6 shadow-xl space-y-3">
-                <p className="text-xs uppercase tracking-wide text-slate-500">
-                  Technologie
-                </p>
-                <div className="flex flex-wrap gap-2 text-xs">
-                  <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full">Next.js</span>
-                  <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full">React</span>
-                  <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full">TypeScript</span>
-                  <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full">Sanity</span>
-                  <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full">Tailwind</span>
-                </div>
-              </div>
-            </div>
+            {/* Obrázek */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8 }}
+              className="flex justify-center"
+            >
+              <Image
+                src="https://placehold.co/600x480/4f46e5/ffffff?text=Notebook"
+                alt="Notebook s kódem"
+                width={600}
+                height={480}
+                className="w-full h-auto max-w-sm sm:max-w-md rounded-3xl shadow-2xl border-4 border-white"
+                priority
+              />
+            </motion.div>
           </div>
-        </section>
+        </motion.section>
 
         {/* O mně */}
-        <section id="o-mne" className="space-y-4">
-          <h2 className="text-3xl font-semibold">O mně</h2>
-          <p className="max-w-3xl text-slate-600 leading-relaxed">
-            Jsem Jiří Veselý — vývojář, který spojuje technické znalosti s
-            praktickým přístupem. Pomáhám firmám i jednotlivcům vytvářet moderní
-            webové projekty, které dobře fungují i vypadají.
-          </p>
-        </section>
+        <motion.section
+          id="o-mne"
+          className="py-16 md:py-20 bg-white"
+          variants={fadeInVariants}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, amount: 0.2 }}
+        >
+          <div className="max-w-5xl mx-auto px-4 grid md:grid-cols-3 gap-10 items-center">
+            <div className="md:col-span-2">
+              <h3 className="text-2xl sm:text-3xl font-bold mb-4 text-indigo-600">
+                Kdo jsem a co dělám?
+              </h3>
+              <p className="text-gray-700 mb-4 text-base sm:text-lg">
+                Specializuji se na kompletní vývoj webových aplikací — od Next.js frontendů po
+                Node.js backendy.
+              </p>
+              <p className="text-gray-500 text-sm">
+                Každý projekt je pro mě výzvou použít nejnovější a nejefektivnější technologie.
+              </p>
+            </div>
+            <motion.div whileHover={{ scale: 1.05, rotate: 3 }}>
+              <Image
+                src="https://placehold.co/200x200/4f46e5/ffffff?text=Jirka+Vesel%C3%BD"
+                alt="Jirka Veselý"
+                width={200}
+                height={200}
+                className="rounded-full w-40 h-40 sm:w-48 sm:h-48 object-cover mx-auto border-4 border-indigo-200 shadow-xl"
+              />
+            </motion.div>
+          </div>
+        </motion.section>
 
         {/* Dovednosti */}
-        <section id="dovednosti" className="space-y-6">
-          <h2 className="text-3xl font-semibold">Dovednosti</h2>
-
-          {skills.length === 0 && !loading && (
-            <p className="text-slate-500 text-sm">Přidej dokumenty typu "skill".</p>
-          )}
-
-          <div className="flex flex-wrap gap-3">
-            {skills.map((skill) => (
-              <span
-                key={skill._id}
-                className="px-4 py-2 rounded-full border border-slate-300 bg-white text-sm flex items-center gap-2 shadow-sm"
-              >
-                <span className="text-lg">{skill.emoji || "💡"}</span>
-                {skill.name}
-              </span>
-            ))}
+        <section id="dovednosti" className="py-16 bg-gray-100 text-center">
+          <h3 className="text-2xl sm:text-3xl font-bold mb-8 sm:mb-12">Můj technologický Stack 🛠️</h3>
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4 px-4">
+            {skills.length === 0 ? (
+              <p className="text-gray-500">Načítám dovednosti...</p>
+            ) : (
+              skills.map((s) => (
+                <motion.div
+                  key={s._id}
+                  whileHover={{ scale: 1.1 }}
+                  className="px-4 sm:px-6 py-2 sm:py-3 border-2 border-indigo-400 text-indigo-700 font-bold rounded-full bg-white shadow-lg flex items-center gap-2 text-sm sm:text-base"
+                >
+                  <span>{s.icon ?? "💡"}</span> {s.name}
+                </motion.div>
+              ))
+            )}
           </div>
         </section>
 
-        {/* Projekty */}
-        <section id="portfolio" className="space-y-6">
-          <h2 className="text-3xl font-semibold">Projekty</h2>
+        {/* Portfolio */}
+        <section id="portfolio" className="py-20 md:py-24 bg-white text-center">
+          <h3 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-gray-800">
+            Vaše projekty, moje řešení 🏆
+          </h3>
 
-          {projects.length === 0 && !loading && (
-            <p className="text-slate-500 text-sm">Přidej dokumenty typu "project".</p>
+          {projects.length === 0 ? (
+            <p className="text-gray-500">Načítám projekty...</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto px-4">
+              {projects.map((p) => (
+                <motion.div
+                  key={p._id}
+                  whileHover={{ scale: 1.05, translateY: -4 }}
+                  className="bg-gray-50 border border-indigo-100 shadow-xl rounded-2xl overflow-hidden group"
+                >
+                  {p.imageUrl && (
+                    <motion.div
+                      initial={{ opacity: 0.8 }}
+                      whileInView={{ opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <Image
+                        src={p.imageUrl}
+                        alt={p.title}
+                        width={1200}
+                        height={800}
+                        className="w-full h-auto object-cover transition-opacity duration-300 group-hover:opacity-90"
+                      />
+                    </motion.div>
+                  )}
+
+                  <div className="p-5 sm:p-6 text-left">
+                    <Link href={`/projekty/${p.slug?.current || ""}`}>
+                      <h4 className="text-lg sm:text-xl font-bold text-indigo-600 mb-2 hover:underline">
+                        {p.title}
+                      </h4>
+                    </Link>
+                    <p className="text-gray-600 mb-4 text-sm sm:text-base">
+                      {p.description}
+                    </p>
+                    <Link
+                      href={`/projekty/${p.slug?.current || ""}`}
+                      className="inline-flex items-center text-indigo-600 font-semibold hover:text-indigo-800 text-sm sm:text-base"
+                    >
+                      Zobrazit více
+                      <span className="ml-1 text-lg">→</span>
+                    </Link>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           )}
-
-          <div className="grid sm:grid-cols-2 gap-6">
-            {projects.map((project) => (
-              <ProjectCard key={project._id} project={project} />
-            ))}
-          </div>
         </section>
 
         {/* Služby */}
-        <section id="sluzby" className="space-y-6">
-          <h2 className="text-3xl font-semibold">Služby</h2>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service) => (
-              <div
-                key={service._id}
-                className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{(service as any).icon || "🛠️"}</span>
-                  <h3 className="text-lg font-semibold">
-                    {service.title}
-                  </h3>
-                </div>
-                <p className="text-slate-600 text-sm mt-2">
-                  {service.shortDescription}
-                </p>
-              </div>
-            ))}
+        <section id="sluzby" className="py-20 md:py-24 bg-indigo-50 text-center">
+          <h3 className="text-2xl sm:text-3xl font-bold mb-8 sm:mb-12 text-gray-800">
+            Co pro vás mohu udělat?
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10 max-w-6xl mx-auto px-4">
+            {services.length === 0 ? (
+              <p className="text-gray-500">Načítám služby...</p>
+            ) : (
+              services.map((s) => (
+                <motion.div
+                  key={s._id}
+                  whileHover={{ y: -8 }}
+                  className="p-6 sm:p-8 rounded-3xl bg-white shadow-xl border-b-4 border-indigo-500 text-left"
+                >
+                  <div className="text-3xl sm:text-4xl mb-4">{s.icon}</div>
+                  <h4 className="text-lg sm:text-xl font-bold mb-3 text-indigo-700">
+                    {s.title}
+                  </h4>
+                  <p className="text-gray-600 text-sm sm:text-base">{s.description}</p>
+                </motion.div>
+              ))
+            )}
           </div>
         </section>
 
         {/* Reference */}
-        <section id="reference" className="space-y-6">
-          <h2 className="text-3xl font-semibold">Reference</h2>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            {references.map((ref) => (
-              <figure
-                key={ref._id}
-                className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm"
-              >
-                <blockquote className="text-slate-700 italic leading-relaxed">
-                  „{ref.quote}“
-                </blockquote>
-                <figcaption className="mt-3 text-sm text-slate-600">
-                  <strong>{ref.name}</strong>
-                  {ref.company && <> · {ref.company}</>}
-                  {ref.role && <> – {ref.role}</>}
-                </figcaption>
-              </figure>
-            ))}
+        <section id="reference" className="py-20 md:py-24 bg-white text-center">
+          <h3 className="text-2xl sm:text-3xl font-bold mb-8 sm:mb-12 text-gray-800">
+            Co o mně říkají klienti 🗣️
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto px-4">
+            {references.length === 0 ? (
+              <p className="text-gray-500">Načítám reference...</p>
+            ) : (
+              references.map((r) => (
+                <motion.div
+                  key={r._id}
+                  whileHover={{ y: -6 }}
+                  className="p-6 sm:p-8 bg-gray-50 border border-gray-200 rounded-xl shadow-lg text-left"
+                >
+                  <p className="italic text-gray-700 mb-4 text-sm sm:text-base">“{r.text}”</p>
+                  <h4 className="font-bold text-indigo-600 text-sm sm:text-base">{r.name}</h4>
+                  <span className="text-xs sm:text-sm text-gray-500">{r.company}</span>
+                </motion.div>
+              ))
+            )}
           </div>
         </section>
 
         {/* Kontakt */}
-        <section id="kontakt" className="space-y-6">
-          <h2 className="text-3xl font-semibold">Kontakt</h2>
-          <p className="max-w-xl text-slate-600">
-            Zanech mi zprávu — rád ti pomůžu rozjet nebo zmodernizovat tvůj digitální projekt.
-          </p>
-
-          <ContactForm />
+        <section id="kontakt" className="py-20 md:py-24 bg-indigo-600 text-white text-center">
+          <div className="max-w-3xl mx-auto bg-white p-6 sm:p-8 md:p-10 rounded-2xl shadow-2xl text-gray-800">
+            <h3 className="text-2xl sm:text-3xl font-bold mb-4 text-indigo-700">
+              Pojďme to probrat!
+            </h3>
+            <p className="text-gray-600 mb-6 sm:mb-8 text-sm sm:text-base">
+              Napište mi a do 24 hodin se ozvu.
+            </p>
+            <form className="space-y-4">
+              <input
+                type="text"
+                placeholder="Tvé jméno *"
+                className="w-full border rounded-lg p-3 text-sm sm:text-base"
+                required
+              />
+              <input
+                type="email"
+                placeholder="Tvůj e-mail *"
+                className="w-full border rounded-lg p-3 text-sm sm:text-base"
+                required
+              />
+              <textarea
+                placeholder="Tvá zpráva *"
+                rows={5}
+                className="w-full border rounded-lg p-3 text-sm sm:text-base"
+                required
+              ></textarea>
+              <button className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 text-sm sm:text-base">
+                Odeslat zprávu
+              </button>
+            </form>
+          </div>
         </section>
       </main>
-
-      <Footer />
     </div>
-  )
+  );
 }
-
