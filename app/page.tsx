@@ -1,10 +1,8 @@
-'use client';
+"use client";
 
+import { useEffect, useState, useCallback, useMemo, type MouseEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, useCallback, useMemo, type MouseEvent } from "react";
-import { motion, type Variants } from "framer-motion";
-import type { CSSProperties } from "react";
 
 import {
   getProjects,
@@ -17,7 +15,6 @@ import {
   type SanitySkill,
 } from "../lib/sanity";
 
-// Navigace
 const NAV_LINKS = [
   { href: "#uvod", label: "Úvod" },
   { href: "#o-mne", label: "O mně" },
@@ -28,17 +25,19 @@ const NAV_LINKS = [
   { href: "#kontakt", label: "Kontakt" },
 ];
 
-const SCROLL_OFFSET = 120;
+const SCROLL_OFFSET = 90;
 
-const fadeInVariants: Variants = {
-  initial: { opacity: 0, y: 50 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
-};
+type Theme = "light" | "dark";
+
+function cn(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
 
 export default function PortfolioPage() {
   const [loading, setLoading] = useState(true);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("uvod");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [theme, setTheme] = useState<Theme>("light");
 
   const [projects, setProjects] = useState<SanityProject[]>([]);
   const [services, setServices] = useState<SanityService[]>([]);
@@ -48,17 +47,23 @@ export default function PortfolioPage() {
   // Načtení dat ze Sanity
   useEffect(() => {
     async function load() {
-      const [p, s, r, sk] = await Promise.all([
-        getProjects(),
-        getServices(),
-        getReferences(),
-        getSkills(),
-      ]);
-      setProjects(p);
-      setServices(s);
-      setReferences(r);
-      setSkills(sk);
-      setLoading(false);
+      try {
+        const [p, s, r, sk] = await Promise.all([
+          getProjects(),
+          getServices(),
+          getReferences(),
+          getSkills(),
+        ]);
+
+        setProjects(p);
+        setServices(s);
+        setReferences(r);
+        setSkills(sk);
+      } catch (e) {
+        console.error("Chyba při načítání dat ze Sanity:", e);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
@@ -66,12 +71,12 @@ export default function PortfolioPage() {
   // Smooth scroll
   const handleSmoothScroll = useCallback(
     (e: MouseEvent<HTMLAnchorElement>) => {
-      const targetId = e.currentTarget.getAttribute("href")?.replace("#", "");
-      const el = targetId ? document.getElementById(targetId) : null;
-      if (el) {
+      const targetId = e.currentTarget.getAttribute("href")?.substring(1);
+      const target = targetId ? document.getElementById(targetId) : null;
+      if (target) {
         e.preventDefault();
         window.scrollTo({
-          top: el.offsetTop - SCROLL_OFFSET,
+          top: target.offsetTop - SCROLL_OFFSET,
           behavior: "smooth",
         });
         setIsMenuOpen(false);
@@ -83,17 +88,18 @@ export default function PortfolioPage() {
   // Aktivní sekce podle scrollu
   useEffect(() => {
     const sections = document.querySelectorAll<HTMLElement>("section[id]");
+
     const onScroll = () => {
-      let currentId = "";
-      const y = window.scrollY + SCROLL_OFFSET + 10;
+      const scrollY = window.scrollY + SCROLL_OFFSET + 10;
+      let currentId = "uvod";
 
       sections.forEach((el) => {
-        if (y >= el.offsetTop && y < el.offsetTop + el.offsetHeight) {
+        if (scrollY >= el.offsetTop && scrollY < el.offsetTop + el.offsetHeight) {
           currentId = el.id;
         }
       });
 
-      setActiveSection(currentId || "uvod");
+      setActiveSection(currentId);
     };
 
     window.addEventListener("scroll", onScroll);
@@ -102,7 +108,7 @@ export default function PortfolioPage() {
 
   // Styl mobilního menu
   const mobileMenuStyles = useMemo(
-    (): CSSProperties => ({
+    () => ({
       height: isMenuOpen ? "auto" : "0",
       opacity: isMenuOpen ? 1 : 0,
       pointerEvents: isMenuOpen ? "auto" : "none",
@@ -110,88 +116,154 @@ export default function PortfolioPage() {
     [isMenuOpen]
   );
 
-  return (
-    <div className="font-sans bg-slate-950 text-slate-100">
-      {/* LOADER */}
-      {loading && (
-        <motion.div
-          initial={{ opacity: 1 }}
-          animate={{ opacity: 0 }}
-          transition={{ duration: 0.8 }}
-          className="fixed inset-0 flex items-center justify-center bg-slate-950 z-[100] text-white text-4xl font-extrabold"
-        >
-          <motion.span
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, repeat: Infinity, repeatType: "reverse" }}
-          >
-            Jirka Veselý 💻
-          </motion.span>
-        </motion.div>
-      )}
+  const isDark = theme === "dark";
 
-      {/* HEADER */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto flex justify-between items-center px-4 py-4">
+  return (
+    <div
+      className={cn(
+        "min-h-screen transition-colors duration-300",
+        isDark ? "bg-slate-950 text-slate-50" : "bg-slate-50 text-slate-900"
+      )}
+    >
+      {/* Horní navigace */}
+      <header
+        className={cn(
+          "sticky top-0 z-40 border-b backdrop-blur-xl",
+          isDark
+            ? "bg-slate-950/85 border-slate-800"
+            : "bg-white/85 border-slate-200 shadow-sm"
+        )}
+      >
+        <div className="max-w-6xl mx-auto flex items-center justify-between px-4 h-16">
+          {/* Logo / jméno */}
           <a
             href="#uvod"
             onClick={handleSmoothScroll}
-            className="text-2xl font-extrabold text-indigo-400"
+            className="flex items-center gap-2"
           >
-            &lt;JirkaVeselý /&gt;
+            <div
+              className={cn(
+                "h-9 w-9 rounded-2xl flex items-center justify-center text-sm font-semibold",
+                isDark ? "bg-indigo-500 text-white" : "bg-indigo-600 text-white"
+              )}
+            >
+              JV
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span className="text-sm font-semibold">Jiří Veselý</span>
+              <span className="text-xs text-slate-400">
+                Full-stack vývojář &amp; konzultant
+              </span>
+            </div>
           </a>
 
-          {/* Mobilní — burger */}
-          <button
-            onClick={() => setIsMenuOpen((p) => !p)}
-            className="md:hidden text-3xl p-2 text-indigo-300"
-          >
-            {isMenuOpen ? "✕" : "☰"}
-          </button>
-
           {/* Desktop navigace */}
-          <nav className="hidden md:flex gap-6 text-sm items-center">
+          <nav className="hidden md:flex items-center gap-6 text-sm">
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={handleSmoothScroll}
-                className={`transition ${
+                className={cn(
+                  "transition-colors",
                   activeSection === link.href.slice(1)
-                    ? "text-indigo-400 font-semibold"
-                    : "text-slate-300 hover:text-indigo-300"
-                }`}
+                    ? isDark
+                      ? "text-indigo-300"
+                      : "text-indigo-600"
+                    : isDark
+                    ? "text-slate-300 hover:text-slate-100"
+                    : "text-slate-600 hover:text-slate-900"
+                )}
               >
                 {link.label}
               </a>
             ))}
 
+            {/* CTA */}
             <a
               href="#kontakt"
               onClick={handleSmoothScroll}
-              className="px-5 py-2 rounded-full bg-indigo-500 text-slate-950 font-semibold hover:bg-indigo-400 transition"
+              className={cn(
+                "ml-2 px-4 py-2 rounded-full text-xs font-medium shadow-sm transition-colors",
+                isDark
+                  ? "bg-indigo-500 text-white hover:bg-indigo-400"
+                  : "bg-indigo-600 text-white hover:bg-indigo-500"
+              )}
             >
-              Spolupracujme
+              Domluvit konzultaci
             </a>
+
+            {/* Přepínač tématu */}
+            <button
+              type="button"
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+              className={cn(
+                "ml-2 inline-flex h-8 w-8 items-center justify-center rounded-full border text-xs",
+                isDark
+                  ? "border-slate-700 text-slate-300 hover:bg-slate-800"
+                  : "border-slate-200 text-slate-600 hover:bg-slate-100"
+              )}
+              aria-label="Přepnout světlý / tmavý režim"
+            >
+              {isDark ? "☀️" : "🌙"}
+            </button>
           </nav>
+
+          {/* Mobilní ovladače */}
+          <div className="flex items-center gap-2 md:hidden">
+            <button
+              type="button"
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+              className={cn(
+                "inline-flex h-9 w-9 items-center justify-center rounded-full border text-base",
+                isDark
+                  ? "border-slate-700 text-slate-200 hover:bg-slate-800"
+                  : "border-slate-200 text-slate-700 hover:bg-slate-100"
+              )}
+              aria-label="Přepnout světlý / tmavý režim"
+            >
+              {isDark ? "☀️" : "🌙"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen((prev) => !prev)}
+              className={cn(
+                "inline-flex h-9 w-9 items-center justify-center rounded-full border text-lg",
+                isDark
+                  ? "border-slate-700 text-slate-200 hover:bg-slate-800"
+                  : "border-slate-200 text-slate-700 hover:bg-slate-100"
+              )}
+              aria-label="Otevřít menu"
+            >
+              {isMenuOpen ? "✕" : "☰"}
+            </button>
+          </div>
         </div>
 
         {/* Mobilní menu */}
         <nav
           style={mobileMenuStyles}
-          className="md:hidden bg-slate-900 border-t border-slate-800 overflow-hidden transition-all duration-300"
+          className={cn(
+            "md:hidden overflow-hidden transition-all duration-200 border-t",
+            isDark ? "bg-slate-950 border-slate-800" : "bg-white border-slate-200"
+          )}
         >
-          <div className="flex flex-col p-4 gap-2">
+          <div className="px-4 py-3 flex flex-col gap-1 text-sm">
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={handleSmoothScroll}
-                className={`block py-2 rounded-lg ${
+                className={cn(
+                  "rounded-lg px-2 py-2",
                   activeSection === link.href.slice(1)
-                    ? "text-indigo-400 font-semibold"
-                    : "text-slate-300 hover:bg-slate-800"
-                }`}
+                    ? isDark
+                      ? "bg-slate-800 text-indigo-300"
+                      : "bg-indigo-50 text-indigo-700"
+                    : isDark
+                    ? "text-slate-200 hover:bg-slate-900"
+                    : "text-slate-700 hover:bg-slate-50"
+                )}
               >
                 {link.label}
               </a>
@@ -200,219 +272,377 @@ export default function PortfolioPage() {
         </nav>
       </header>
 
-      {/* ÚVOD */}
-      <motion.section
-        id="uvod"
-        className="min-h-[75vh] flex items-center bg-gradient-to-br from-indigo-900/20 to-slate-950 py-20"
-        variants={fadeInVariants}
-        initial="initial"
-        whileInView="animate"
-      >
-        <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-              Váš{" "}
-              <span className="text-indigo-400">
-                Full-Stack
-              </span>{" "}
-              partner pro inovace
+      {/* Hlavní obsah */}
+      <main className="max-w-6xl mx-auto px-4 pt-10 pb-20 space-y-24">
+        {/* Úvod */}
+        <section
+          id="uvod"
+          className="grid gap-10 md:grid-cols-[minmax(0,1.6fr),minmax(0,1.2fr)] items-center"
+        >
+          <div className="space-y-5">
+            <p className={cn("text-xs tracking-[0.2em] uppercase", isDark ? "text-indigo-300" : "text-indigo-500")}>
+              Ahoj, jsem Jirka
+            </p>
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
+              Tvořím čisté, rychlé a promyšlené weby a aplikace.
             </h1>
-
-            <p className="text-slate-300 text-lg">
-              Přeměňuji nápady na výkonné webové aplikace s elegantním kódem a moderním UX.
+            <p className={cn("text-sm md:text-base max-w-xl", isDark ? "text-slate-300" : "text-slate-600")}>
+              Specializuji se na React / Next.js, headless CMS (Sanity) a moderní frontend.
+              Pomůžu ti s prezentací, která vypadá profesionálně, je rychlá a snadno se spravuje.
             </p>
 
-            <a
-              href="#kontakt"
-              onClick={handleSmoothScroll}
-              className="inline-block px-8 py-3 bg-indigo-500 text-slate-950 rounded-full font-bold hover:bg-indigo-400 transition"
-            >
-              Mám zájem o web
-            </a>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
-            className="flex justify-center"
-          >
-            <Image
-              src="https://placehold.co/600x480/4f46e5/ffffff?text=Notebook"
-              alt="Notebook"
-              width={600}
-              height={480}
-              className="rounded-3xl shadow-2xl border border-white/10"
-            />
-          </motion.div>
-        </div>
-      </motion.section>
-
-      {/* O MNĚ */}
-      <motion.section
-        id="o-mne"
-        className="py-20 bg-slate-900"
-        variants={fadeInVariants}
-        initial="initial"
-        whileInView="animate"
-      >
-        <div className="max-w-5xl mx-auto px-4 grid md:grid-cols-3 gap-12 items-center">
-          <div className="md:col-span-2 space-y-3">
-            <h3 className="text-3xl font-bold text-indigo-400">Kdo jsem?</h3>
-            <p className="text-slate-300 text-lg">
-              Specializuji se na kompletní vývoj webových aplikací — Next.js frontend,
-              Node.js backend, API a integrace.
-            </p>
-            <p className="text-slate-400 text-sm">
-              Každý projekt je příležitostí použít moderní nástroje a maximální výkon.
-            </p>
-          </div>
-
-          <motion.div whileHover={{ scale: 1.05 }}>
-            <Image
-              src="https://placehold.co/200x200/4f46e5/ffffff?text=Jirka"
-              alt="Jirka Veselý"
-              width={200}
-              height={200}
-              className="rounded-full mx-auto border-4 border-indigo-400 shadow-xl"
-            />
-          </motion.div>
-        </div>
-      </motion.section>
-
-      {/* DOVEDNOSTI */}
-      <section id="dovednosti" className="py-20 bg-slate-950 text-center">
-        <h3 className="text-3xl font-bold text-indigo-400 mb-10">Tech Stack 🛠️</h3>
-
-        <div className="flex flex-wrap justify-center gap-3">
-          {skills.length === 0 ? (
-            <p className="text-slate-400">Načítám...</p>
-          ) : (
-            skills.map((skill) => (
-              <motion.div
-                key={skill._id}
-                whileHover={{ scale: 1.1 }}
-                className="px-5 py-2 border border-indigo-400 rounded-full bg-slate-900 shadow-md text-indigo-300 font-semibold"
-              >
-                {skill.icon ?? "💡"} {skill.name}
-              </motion.div>
-            ))
-          )}
-        </div>
-      </section>
-
-      {/* PORTFOLIO */}
-      <section id="portfolio" className="py-20 bg-slate-900">
-        <h3 className="text-3xl font-bold text-center text-indigo-400 mb-10">
-          Vybrané projekty 🏆
-        </h3>
-
-        {projects.length === 0 ? (
-          <p className="text-center text-slate-400">Načítám...</p>
-        ) : (
-          <div className="max-w-6xl mx-auto px-4 grid sm:grid-cols-2 md:grid-cols-3 gap-8">
-            {projects.map((p) => (
-              <motion.div
-                key={p._id}
-                whileHover={{ scale: 1.03, y: -4 }}
-                className="rounded-2xl bg-slate-800 border border-slate-700 shadow-xl overflow-hidden"
-              >
-                {p.imageUrl && (
-                  <Image
-                    src={p.imageUrl}
-                    alt={p.title}
-                    width={1200}
-                    height={800}
-                    className="w-full h-auto object-cover"
-                  />
+            <div className="flex flex-wrap gap-3 text-sm">
+              <a
+                href="#kontakt"
+                onClick={handleSmoothScroll}
+                className={cn(
+                  "inline-flex items-center rounded-full px-5 py-2 font-medium shadow-sm",
+                  isDark
+                    ? "bg-indigo-500 text-white hover:bg-indigo-400"
+                    : "bg-indigo-600 text-white hover:bg-indigo-500"
                 )}
+              >
+                Domluvit konzultaci
+              </a>
+              <a
+                href="#portfolio"
+                onClick={handleSmoothScroll}
+                className={cn(
+                  "inline-flex items-center rounded-full px-5 py-2 border text-sm",
+                  isDark
+                    ? "border-slate-700 text-slate-100 hover:bg-slate-900"
+                    : "border-slate-300 text-slate-800 hover:bg-slate-100"
+                )}
+              >
+                Zobrazit projekty
+              </a>
+            </div>
 
-                <div className="p-6">
-                  <Link href={`/projekty/${p.slug.current}`}>
-                    <h4 className="text-xl text-indigo-300 font-bold hover:underline">
-                      {p.title}
-                    </h4>
-                  </Link>
+            <div className="grid grid-cols-2 gap-4 pt-4 text-xs md:text-sm">
+              <div
+                className={cn(
+                  "rounded-2xl p-4 border",
+                  isDark ? "border-slate-800 bg-slate-900/60" : "border-slate-200 bg-white"
+                )}
+              >
+                <p className="font-semibold">Moderní stack</p>
+                <p className={cn(isDark ? "text-slate-300" : "text-slate-500")}>
+                  Next.js, TypeScript, Tailwind, Sanity – vše připravené pro škálování.
+                </p>
+              </div>
+              <div
+                className={cn(
+                  "rounded-2xl p-4 border",
+                  isDark ? "border-slate-800 bg-slate-900/60" : "border-slate-200 bg-white"
+                )}
+              >
+                <p className="font-semibold">Byznysový pohled</p>
+                <p className={cn(isDark ? "text-slate-300" : "text-slate-500")}>
+                  Nejen kód, ale i praktický přístup – co ti reálně přinese výsledky.
+                </p>
+              </div>
+            </div>
+          </div>
 
-                  <p className="text-slate-400 mt-2">{p.description}</p>
+          <div className="relative">
+            <div
+              className={cn(
+                "rounded-3xl p-5 md:p-6 border shadow-xl",
+                isDark
+                  ? "border-slate-800 bg-slate-900/70 shadow-black/60"
+                  : "border-slate-200 bg-white shadow-slate-900/5"
+              )}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-medium text-slate-400">Náhled projektu</span>
+                <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-indigo-50 text-indigo-600">
+                  • Live preview
+                </span>
+              </div>
+              <div className="rounded-2xl overflow-hidden border border-slate-800/10 bg-slate-950/80">
+                <Image
+                  src="https://placehold.co/800x480/020617/ffffff?text=Portfolio+Preview"
+                  alt="Ukázka portfolia"
+                  width={800}
+                  height={480}
+                  className="w-full h-auto"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
 
-                  <Link
-                    className="inline-flex items-center text-indigo-300 font-semibold mt-4"
-                    href={`/projekty/${p.slug.current}`}
-                  >
-                    Zobrazit více →
-                  </Link>
-                </div>
-              </motion.div>
+        {/* O mně */}
+        <section id="o-mne" className="grid md:grid-cols-[minmax(0,1.5fr),minmax(0,1fr)] gap-10 items-center">
+          <div className="space-y-4">
+            <h2 className="text-xl md:text-2xl font-semibold">O mně</h2>
+            <p className={cn("text-sm md:text-base", isDark ? "text-slate-300" : "text-slate-600")}>
+              Jmenuji se Jiří Veselý. Spojuji technickou stránku vývoje s praktickým pohledem na to,
+              co dává byznysově smysl. Myslím na výkon, bezpečnost i budoucí rozšiřování.
+            </p>
+            <p className={cn("text-sm md:text-base", isDark ? "text-slate-300" : "text-slate-600")}>
+              Mám zkušenosti s návrhem architektury, integrací třetích stran, hostováním i nasazováním.
+              Umím pomoct jak s novým projektem, tak s refaktoringem stávajícího řešení.
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <div
+              className={cn(
+                "rounded-3xl p-5 border w-full max-w-sm text-sm",
+                isDark ? "border-slate-800 bg-slate-900/70" : "border-slate-200 bg-white"
+              )}
+            >
+              <p className="text-xs text-slate-400 mb-2">Rychlý přehled</p>
+              <ul className="space-y-2">
+                <li className="flex justify-between">
+                  <span>Stack</span>
+                  <span className="text-slate-400">React, Next.js, Node.js</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Frontend</span>
+                  <span className="text-slate-400">TypeScript, Tailwind</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>CMS</span>
+                  <span className="text-slate-400">Sanity, Strapi, další</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Forma spolupráce</span>
+                  <span className="text-slate-400">Projektově / dlouhodobě</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Dovednosti */}
+        <section id="dovednosti" className="space-y-4">
+          <h2 className="text-xl font-semibold">Dovednosti</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {skills.length === 0 && !loading && (
+              <p className={cn("text-sm col-span-full", isDark ? "text-slate-400" : "text-slate-500")}>
+                Zatím nemáš ve studiu žádné dovednosti – přidej dokumenty typu{" "}
+                <strong>skill</strong>.
+              </p>
+            )}
+            {skills.map((skill) => (
+              <div
+                key={skill._id}
+                className={cn(
+                  "rounded-2xl px-3 py-2 text-xs flex items-center gap-2 border",
+                  isDark ? "border-slate-800 bg-slate-900/70" : "border-slate-200 bg-white"
+                )}
+              >
+                <span className="text-lg">{(skill as any).emoji || (skill as any).icon || "💡"}</span>
+                <span>{skill.name}</span>
+              </div>
             ))}
           </div>
-        )}
-      </section>
+        </section>
 
-      {/* SLUŽBY */}
-      <section id="sluzby" className="py-20 bg-slate-950">
-        <h3 className="text-3xl font-bold text-center text-indigo-400 mb-10">
-          Co nabízím?
-        </h3>
+        {/* Portfolio */}
+        <section id="portfolio" className="space-y-4">
+          <h2 className="text-xl font-semibold">Vybrané projekty</h2>
+          {projects.length === 0 && !loading && (
+            <p className={cn("text-sm", isDark ? "text-slate-400" : "text-slate-500")}>
+              Zatím nemáš ve studiu žádné projekty – přidej dokumenty typu <strong>project</strong>.
+            </p>
+          )}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {projects.map((p) => (
+              <article
+                key={p._id}
+                className={cn(
+                  "rounded-2xl overflow-hidden border flex flex-col",
+                  isDark ? "border-slate-800 bg-slate-900/70" : "border-slate-200 bg-white"
+                )}
+              >
+                {p.imageUrl && (
+                  <div className="aspect-[4/3] w-full overflow-hidden">
+                    <Image
+                      src={p.imageUrl}
+                      alt={p.title}
+                      width={800}
+                      height={600}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="p-4 flex flex-col gap-2">
+                  <Link href={`/projekty/${p.slug?.current || ""}`}>
+                    <h3
+                      className={cn(
+                        "text-sm font-semibold",
+                        isDark ? "text-slate-50 hover:text-indigo-300" : "text-slate-900 hover:text-indigo-600"
+                      )}
+                    >
+                      {p.title}
+                    </h3>
+                  </Link>
+                  {p.description && (
+                    <p className={cn("text-xs", isDark ? "text-slate-300" : "text-slate-600")}>
+                      {p.description}
+                    </p>
+                  )}
+                  <Link
+                    href={`/projekty/${p.slug?.current || ""}`}
+                    className={cn(
+                      "mt-1 text-xs font-medium inline-flex items-center gap-1",
+                      isDark ? "text-indigo-300" : "text-indigo-600"
+                    )}
+                  >
+                    Detail projektu <span>→</span>
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
 
-        <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-8">
-          {services.map((s) => (
-            <motion.div
-              key={s._id}
-              whileHover={{ scale: 1.05 }}
-              className="p-6 rounded-2xl bg-slate-900 border border-indigo-500 shadow-xl"
-            >
-              <div className="text-4xl mb-4">{s.icon}</div>
-              <h4 className="text-xl text-indigo-300 font-bold mb-3">{s.title}</h4>
-              <p className="text-slate-400">{s.description}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+        {/* Služby */}
+        <section id="sluzby" className="space-y-4">
+          <h2 className="text-xl font-semibold">Služby</h2>
+          {services.length === 0 && !loading && (
+            <p className={cn("text-sm", isDark ? "text-slate-400" : "text-slate-500")}>
+              Přidej dokumenty typu <strong>service</strong> a zobrazí se tady jako nabídka služeb.
+            </p>
+          )}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {services.map((s) => (
+              <article
+                key={s._id}
+                className={cn(
+                  "rounded-2xl p-4 space-y-2 border",
+                  isDark ? "border-slate-800 bg-slate-900/70" : "border-slate-200 bg-white"
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{(s as any).icon || "🛠️"}</span>
+                  <h3 className="text-sm font-semibold">{s.title}</h3>
+                </div>
+                {(s as any).shortDescription && (
+                  <p className={cn("text-xs", isDark ? "text-slate-300" : "text-slate-600")}>
+                    {(s as any).shortDescription}
+                  </p>
+                )}
+                {(s as any).description && !(s as any).shortDescription && (
+                  <p className={cn("text-xs", isDark ? "text-slate-300" : "text-slate-600")}>
+                    {(s as any).description}
+                  </p>
+                )}
+              </article>
+            ))}
+          </div>
+        </section>
 
-      {/* REFERENCE */}
-      <section id="reference" className="py-20 bg-slate-900">
-        <h3 className="text-3xl font-bold text-center text-indigo-400 mb-10">
-          Co říkají klienti 🗣️
-        </h3>
+        {/* Reference */}
+        <section id="reference" className="space-y-4">
+          <h2 className="text-xl font-semibold">Reference</h2>
+          {references.length === 0 && !loading && (
+            <p className={cn("text-sm", isDark ? "text-slate-400" : "text-slate-500")}>
+              Až přidáš do studia dokumenty typu <strong>reference</strong>, zobrazí se tady doporučení
+              a testimonialy.
+            </p>
+          )}
+          <div className="grid md:grid-cols-2 gap-4">
+            {references.map((r) => (
+              <figure
+                key={r._id}
+                className={cn(
+                  "rounded-2xl p-4 border space-y-2",
+                  isDark ? "border-slate-800 bg-slate-900/70" : "border-slate-200 bg-white"
+                )}
+              >
+                <blockquote className={cn("text-sm", isDark ? "text-slate-200" : "text-slate-700")}>
+                  „{(r as any).quote || (r as any).text}“
+                </blockquote>
+                <figcaption className={cn("text-xs", isDark ? "text-slate-400" : "text-slate-500")}>
+                  {r.name}
+                  {(r as any).company && <> · {(r as any).company}</>}
+                  {(r as any).role && <> – {(r as any).role}</>}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
 
-        <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-8">
-          {references.map((r) => (
-            <motion.div
-              key={r._id}
-              whileHover={{ y: -6 }}
-              className="p-6 bg-slate-950 border border-slate-800 rounded-xl shadow-lg"
-            >
-              <p className="italic text-slate-300 mb-4 text-lg">“{r.text}”</p>
-
-              <h4 className="font-bold text-indigo-300">{r.name}</h4>
-              <p className="text-sm text-slate-400">{r.company}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* KONTAKT */}
-      <section id="kontakt" className="py-20 bg-indigo-600 text-center text-white">
-        <div className="max-w-3xl mx-auto bg-white text-slate-900 p-10 rounded-3xl shadow-2xl">
-          <h3 className="text-3xl font-bold mb-5 text-indigo-600">
-            Pojďme spolu pracovat!
-          </h3>
-
-          <p className="text-slate-600 mb-8">
-            napiš mi a do 24 hodin ti odpovím.
+        {/* Kontakt */}
+        <section id="kontakt" className="space-y-4">
+          <h2 className="text-xl font-semibold">Ozvi se</h2>
+          <p className={cn("text-sm max-w-xl", isDark ? "text-slate-300" : "text-slate-600")}>
+            Máš projekt, který bys chtěl konzultovat nebo rozjet? Nech mi na sebe kontakt a krátce
+            popiš, o co jde. Ozvu se ti s návrhem dalšího postupu.
           </p>
-
-          <form className="space-y-4">
-            <input type="text" required placeholder="Jméno" className="w-full border p-3 rounded-lg" />
-            <input type="email" required placeholder="Email" className="w-full border p-3 rounded-lg" />
-            <textarea required placeholder="Zpráva" rows={5} className="w-full border p-3 rounded-lg" />
-            <button className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700">
-              Odeslat
-            </button>
-          </form>
-        </div>
-      </section>
+          <div
+            className={cn(
+              "max-w-xl rounded-3xl p-5 border",
+              isDark ? "border-slate-800 bg-slate-900/70" : "border-slate-200 bg-white"
+            )}
+          >
+            <form className="space-y-3 text-sm">
+              <div className="space-y-1">
+                <label className={cn("block text-xs font-medium", isDark ? "text-slate-300" : "text-slate-600")}>
+                  Jméno
+                </label>
+                <input
+                  type="text"
+                  required
+                  className={cn(
+                    "w-full rounded-xl px-3 py-2 border text-sm outline-none",
+                    isDark
+                      ? "border-slate-700 bg-slate-950/60 text-slate-50 placeholder:text-slate-500 focus:border-indigo-400"
+                      : "border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:border-indigo-500"
+                  )}
+                  placeholder="Jak ti mám říkat?"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className={cn("block text-xs font-medium", isDark ? "text-slate-300" : "text-slate-600")}>
+                  E-mail
+                </label>
+                <input
+                  type="email"
+                  required
+                  className={cn(
+                    "w-full rounded-xl px-3 py-2 border text-sm outline-none",
+                    isDark
+                      ? "border-slate-700 bg-slate-950/60 text-slate-50 placeholder:text-slate-500 focus:border-indigo-400"
+                      : "border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:border-indigo-500"
+                  )}
+                  placeholder="kam ti mám napsat zpět?"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className={cn("block text-xs font-medium", isDark ? "text-slate-300" : "text-slate-600")}>
+                  Zpráva
+                </label>
+                <textarea
+                  required
+                  rows={4}
+                  className={cn(
+                    "w-full rounded-xl px-3 py-2 border text-sm resize-none outline-none",
+                    isDark
+                      ? "border-slate-700 bg-slate-950/60 text-slate-50 placeholder:text-slate-500 focus:border-indigo-400"
+                      : "border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:border-indigo-500"
+                  )}
+                  placeholder="Stručně popiš projekt nebo otázku."
+                />
+              </div>
+              <button
+                type="submit"
+                className={cn(
+                  "mt-2 w-full rounded-full py-2.5 text-sm font-medium shadow-sm",
+                  isDark
+                    ? "bg-indigo-500 text-white hover:bg-indigo-400"
+                    : "bg-indigo-600 text-white hover:bg-indigo-500"
+                )}
+              >
+                Odeslat zprávu
+              </button>
+            </form>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
