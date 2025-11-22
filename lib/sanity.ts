@@ -48,7 +48,7 @@ export async function getProjects(): Promise<SanityProject[]> {
         title,
         description,
         "slug": slug,
-        "imageUrl": coalesce(image.asset->url, "")
+        "imageUrl": image.asset->url
       } | order(_createdAt desc)
     `)
   } catch (e) {

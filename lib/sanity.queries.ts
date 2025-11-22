@@ -40,7 +40,7 @@ export const servicesQuery = groq`
 `
 
 export const referencesQuery = groq`
-  *[_type == "reference"] | order(order asc, _createdAt asc) {
+  *[_type == "testimonial"] | order(order asc, _createdAt asc) {
     _id,
     name,
     company,

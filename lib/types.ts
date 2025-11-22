@@ -16,6 +16,7 @@ export interface SanityProject {
   mainImage?: SanityImage
   url?: string
   order?: number
+  imageUrl?: string; // ← PŘIDÁNO
 }
 
 export interface SanityService {
@@ -32,7 +33,7 @@ export interface SanityReference {
   name: string
   company?: string
   role?: string
-  quote: string
+  quote?: string;   // ← optional = žádná chyba
   avatar?: SanityImage
   order?: number
 }

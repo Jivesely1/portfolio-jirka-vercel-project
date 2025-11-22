@@ -54,7 +54,6 @@ export default function PortfolioPage() {
           getReferences(),
           getSkills(),
         ]);
-
         setProjects(p);
         setServices(s);
         setReferences(r);
@@ -111,7 +110,7 @@ export default function PortfolioPage() {
     () => ({
       height: isMenuOpen ? "auto" : "0",
       opacity: isMenuOpen ? 1 : 0,
-      pointerEvents: isMenuOpen ? "auto" : "none",
+      pointerEvents: isMenuOpen ? "auto" as const : "none" as const,
     }),
     [isMenuOpen]
   );
@@ -280,13 +279,23 @@ export default function PortfolioPage() {
           className="grid gap-10 md:grid-cols-[minmax(0,1.6fr),minmax(0,1.2fr)] items-center"
         >
           <div className="space-y-5">
-            <p className={cn("text-xs tracking-[0.2em] uppercase", isDark ? "text-indigo-300" : "text-indigo-500")}>
+            <p
+              className={cn(
+                "text-xs tracking-[0.2em] uppercase",
+                isDark ? "text-indigo-300" : "text-indigo-500"
+              )}
+            >
               Ahoj, jsem Jirka
             </p>
             <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
               Tvořím čisté, rychlé a promyšlené weby a aplikace.
             </h1>
-            <p className={cn("text-sm md:text-base max-w-xl", isDark ? "text-slate-300" : "text-slate-600")}>
+            <p
+              className={cn(
+                "text-sm md:text-base max-w-xl",
+                isDark ? "text-slate-300" : "text-slate-600"
+              )}
+            >
               Specializuji se na React / Next.js, headless CMS (Sanity) a moderní frontend.
               Pomůžu ti s prezentací, která vypadá profesionálně, je rychlá a snadno se spravuje.
             </p>
@@ -302,7 +311,7 @@ export default function PortfolioPage() {
                     : "bg-indigo-600 text-white hover:bg-indigo-500"
                 )}
               >
-                Domluvit konzultaci
+                Spolupracujme
               </a>
               <a
                 href="#portfolio"
@@ -373,14 +382,27 @@ export default function PortfolioPage() {
         </section>
 
         {/* O mně */}
-        <section id="o-mne" className="grid md:grid-cols-[minmax(0,1.5fr),minmax(0,1fr)] gap-10 items-center">
+        <section
+          id="o-mne"
+          className="grid md:grid-cols-[minmax(0,1.5fr),minmax(0,1fr)] gap-10 items-center"
+        >
           <div className="space-y-4">
             <h2 className="text-xl md:text-2xl font-semibold">O mně</h2>
-            <p className={cn("text-sm md:text-base", isDark ? "text-slate-300" : "text-slate-600")}>
+            <p
+              className={cn(
+                "text-sm md:text-base",
+                isDark ? "text-slate-300" : "text-slate-600"
+              )}
+            >
               Jmenuji se Jiří Veselý. Spojuji technickou stránku vývoje s praktickým pohledem na to,
               co dává byznysově smysl. Myslím na výkon, bezpečnost i budoucí rozšiřování.
             </p>
-            <p className={cn("text-sm md:text-base", isDark ? "text-slate-300" : "text-slate-600")}>
+            <p
+              className={cn(
+                "text-sm md:text-base",
+                isDark ? "text-slate-300" : "text-slate-600"
+              )}
+            >
               Mám zkušenosti s návrhem architektury, integrací třetích stran, hostováním i nasazováním.
               Umím pomoct jak s novým projektem, tak s refaktoringem stávajícího řešení.
             </p>
@@ -420,7 +442,12 @@ export default function PortfolioPage() {
           <h2 className="text-xl font-semibold">Dovednosti</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {skills.length === 0 && !loading && (
-              <p className={cn("text-sm col-span-full", isDark ? "text-slate-400" : "text-slate-500")}>
+              <p
+                className={cn(
+                  "text-sm col-span-full",
+                  isDark ? "text-slate-400" : "text-slate-500"
+                )}
+              >
                 Zatím nemáš ve studiu žádné dovednosti – přidej dokumenty typu{" "}
                 <strong>skill</strong>.
               </p>
@@ -433,7 +460,9 @@ export default function PortfolioPage() {
                   isDark ? "border-slate-800 bg-slate-900/70" : "border-slate-200 bg-white"
                 )}
               >
-                <span className="text-lg">{(skill as any).emoji || (skill as any).icon || "💡"}</span>
+                <span className="text-lg">
+                  {(skill as any).emoji || (skill as any).icon || "💡"}
+                </span>
                 <span>{skill.name}</span>
               </div>
             ))}
@@ -444,8 +473,14 @@ export default function PortfolioPage() {
         <section id="portfolio" className="space-y-4">
           <h2 className="text-xl font-semibold">Vybrané projekty</h2>
           {projects.length === 0 && !loading && (
-            <p className={cn("text-sm", isDark ? "text-slate-400" : "text-slate-500")}>
-              Zatím nemáš ve studiu žádné projekty – přidej dokumenty typu <strong>project</strong>.
+            <p
+              className={cn(
+                "text-sm",
+                isDark ? "text-slate-400" : "text-slate-500"
+              )}
+            >
+              Zatím nemáš ve studiu žádné projekty – přidej dokumenty typu{" "}
+              <strong>project</strong>.
             </p>
           )}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -473,14 +508,21 @@ export default function PortfolioPage() {
                     <h3
                       className={cn(
                         "text-sm font-semibold",
-                        isDark ? "text-slate-50 hover:text-indigo-300" : "text-slate-900 hover:text-indigo-600"
+                        isDark
+                          ? "text-slate-50 hover:text-indigo-300"
+                          : "text-slate-900 hover:text-indigo-600"
                       )}
                     >
                       {p.title}
                     </h3>
                   </Link>
                   {p.description && (
-                    <p className={cn("text-xs", isDark ? "text-slate-300" : "text-slate-600")}>
+                    <p
+                      className={cn(
+                        "text-xs",
+                        isDark ? "text-slate-300" : "text-slate-600"
+                      )}
+                    >
                       {p.description}
                     </p>
                   )}
@@ -503,8 +545,14 @@ export default function PortfolioPage() {
         <section id="sluzby" className="space-y-4">
           <h2 className="text-xl font-semibold">Služby</h2>
           {services.length === 0 && !loading && (
-            <p className={cn("text-sm", isDark ? "text-slate-400" : "text-slate-500")}>
-              Přidej dokumenty typu <strong>service</strong> a zobrazí se tady jako nabídka služeb.
+            <p
+              className={cn(
+                "text-sm",
+                isDark ? "text-slate-400" : "text-slate-500"
+              )}
+            >
+              Přidej dokumenty typu <strong>service</strong> a zobrazí se tady jako
+              nabídka služeb.
             </p>
           )}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -521,12 +569,22 @@ export default function PortfolioPage() {
                   <h3 className="text-sm font-semibold">{s.title}</h3>
                 </div>
                 {(s as any).shortDescription && (
-                  <p className={cn("text-xs", isDark ? "text-slate-300" : "text-slate-600")}>
+                  <p
+                    className={cn(
+                      "text-xs",
+                      isDark ? "text-slate-300" : "text-slate-600"
+                    )}
+                  >
                     {(s as any).shortDescription}
                   </p>
                 )}
                 {(s as any).description && !(s as any).shortDescription && (
-                  <p className={cn("text-xs", isDark ? "text-slate-300" : "text-slate-600")}>
+                  <p
+                    className={cn(
+                      "text-xs",
+                      isDark ? "text-slate-300" : "text-slate-600"
+                    )}
+                  >
                     {(s as any).description}
                   </p>
                 )}
@@ -539,9 +597,14 @@ export default function PortfolioPage() {
         <section id="reference" className="space-y-4">
           <h2 className="text-xl font-semibold">Reference</h2>
           {references.length === 0 && !loading && (
-            <p className={cn("text-sm", isDark ? "text-slate-400" : "text-slate-500")}>
-              Až přidáš do studia dokumenty typu <strong>reference</strong>, zobrazí se tady doporučení
-              a testimonialy.
+            <p
+              className={cn(
+                "text-sm",
+                isDark ? "text-slate-400" : "text-slate-500"
+              )}
+            >
+              Až přidáš do studia dokumenty typu <strong>reference</strong>, zobrazí se
+              tady doporučení a testimonialy.
             </p>
           )}
           <div className="grid md:grid-cols-2 gap-4">
@@ -553,10 +616,20 @@ export default function PortfolioPage() {
                   isDark ? "border-slate-800 bg-slate-900/70" : "border-slate-200 bg-white"
                 )}
               >
-                <blockquote className={cn("text-sm", isDark ? "text-slate-200" : "text-slate-700")}>
+                <blockquote
+                  className={cn(
+                    "text-sm",
+                    isDark ? "text-slate-200" : "text-slate-700"
+                  )}
+                >
                   „{(r as any).quote || (r as any).text}“
                 </blockquote>
-                <figcaption className={cn("text-xs", isDark ? "text-slate-400" : "text-slate-500")}>
+                <figcaption
+                  className={cn(
+                    "text-xs",
+                    isDark ? "text-slate-400" : "text-slate-500"
+                  )}
+                >
                   {r.name}
                   {(r as any).company && <> · {(r as any).company}</>}
                   {(r as any).role && <> – {(r as any).role}</>}
@@ -569,9 +642,14 @@ export default function PortfolioPage() {
         {/* Kontakt */}
         <section id="kontakt" className="space-y-4">
           <h2 className="text-xl font-semibold">Ozvi se</h2>
-          <p className={cn("text-sm max-w-xl", isDark ? "text-slate-300" : "text-slate-600")}>
-            Máš projekt, který bys chtěl konzultovat nebo rozjet? Nech mi na sebe kontakt a krátce
-            popiš, o co jde. Ozvu se ti s návrhem dalšího postupu.
+          <p
+            className={cn(
+              "text-sm max-w-xl",
+              isDark ? "text-slate-300" : "text-slate-600"
+            )}
+          >
+            Máš projekt, který bys chtěl konzultovat nebo rozjet? Nech mi na sebe kontakt a
+            krátce popiš, o co jde. Ozvu se ti s návrhem dalšího postupu.
           </p>
           <div
             className={cn(
@@ -581,7 +659,12 @@ export default function PortfolioPage() {
           >
             <form className="space-y-3 text-sm">
               <div className="space-y-1">
-                <label className={cn("block text-xs font-medium", isDark ? "text-slate-300" : "text-slate-600")}>
+                <label
+                  className={cn(
+                    "block text-xs font-medium",
+                    isDark ? "text-slate-300" : "text-slate-600"
+                  )}
+                >
                   Jméno
                 </label>
                 <input
@@ -597,7 +680,12 @@ export default function PortfolioPage() {
                 />
               </div>
               <div className="space-y-1">
-                <label className={cn("block text-xs font-medium", isDark ? "text-slate-300" : "text-slate-600")}>
+                <label
+                  className={cn(
+                    "block text-xs font-medium",
+                    isDark ? "text-slate-300" : "text-slate-600"
+                  )}
+                >
                   E-mail
                 </label>
                 <input
@@ -613,7 +701,12 @@ export default function PortfolioPage() {
                 />
               </div>
               <div className="space-y-1">
-                <label className={cn("block text-xs font-medium", isDark ? "text-slate-300" : "text-slate-600")}>
+                <label
+                  className={cn(
+                    "block text-xs font-medium",
+                    isDark ? "text-slate-300" : "text-slate-600"
+                  )}
+                >
                   Zpráva
                 </label>
                 <textarea
