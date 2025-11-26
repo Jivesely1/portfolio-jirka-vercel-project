@@ -1,11 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-html, body {
-  height: 100%;
-}
-
-body {
-  @apply bg-gray-50 text-gray-900 antialiased;
+.card {
+  @apply rounded-2xl border 
+  bg-brand-surface dark:bg-brand-surfaceDark
+  border-brand-border dark:border-brand-borderDark
+  shadow-card;
 }
