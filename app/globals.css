@@ -2,10 +2,236 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
+/* =====================================
+   ZÁKLAD – fonty, výchozí chování
+   ===================================== */
+
+html,
+body {
   height: 100%;
 }
 
+html {
+  scroll-behavior: smooth;
+  font-family: var(--font-jakarta), system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
+
+/* =====================================
+   TĚLO STRÁNKY – prémiové pozadí
+   ===================================== */
+
 body {
-  @apply bg-gray-50 text-gray-900 antialiased;
+  @apply antialiased transition-colors duration-300
+    bg-brand-bg text-brand-text
+    dark:bg-brand-bgDark dark:text-brand-textDark;
+
+  /* Light theme background – čisté, prémiové */
+  background-image: radial-gradient(
+    circle at 20% 20%,
+    rgba(255, 255, 255, 0.95),
+    #f5f7fb 55%
+  );
+}
+
+html.dark body {
+  /* Dark theme background – jemná hloubka */
+  background-image: radial-gradient(
+    circle at 10% 0%,
+    rgba(40, 45, 65, 0.45),
+    #0b0e14 60%
+  );
+}
+
+/* =====================================
+   NAVBAR – vždy viditelný, žádné mizení
+   ===================================== */
+
+header.header-blur {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  background: rgba(250, 250, 255, 0.85) !important;
+  border-bottom: 1px solid rgba(210, 213, 220, 0.5);
+  box-shadow: 0 6px 20px rgba(50, 60, 90, 0.08);
+}
+
+html.dark header.header-blur {
+  background: rgba(14, 16, 24, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* top padding kvůli fixnímu headeru */
+main {
+  padding-top: 90px;
+}
+
+/* =====================================
+   TYPOGRAFIE – high-end styl
+   ===================================== */
+
+/* Nadpisy */
+h1,
+h2,
+h3,
+h4 {
+  @apply font-semibold tracking-tight;
+  color: rgb(var(--brand-text));
+}
+
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4 {
+  color: rgb(var(--brand-textDark));
+}
+
+h1 {
+  font-size: clamp(2.4rem, 6vw, 3.7rem);
+  line-height: 1.15;
+  margin-bottom: 1.4rem;
+}
+
+h2 {
+  font-size: clamp(1.9rem, 4.5vw, 2.7rem);
+  margin-bottom: 1.2rem;
+}
+
+h3 {
+  font-size: clamp(1.45rem, 3.1vw, 2rem);
+  margin-bottom: 0.8rem;
+}
+
+h4 {
+  font-size: clamp(1.2rem, 2.4vw, 1.4rem);
+}
+
+/* Odstavce */
+p {
+  font-size: 1.05rem;
+  line-height: 1.75;
+  max-width: 70ch;
+  margin-bottom: 1.4rem;
+  color: rgb(var(--brand-textMuted));
+}
+
+html.dark p {
+  color: rgb(var(--brand-textMutedDark));
+}
+
+/* Odkazy */
+a {
+  @apply font-medium transition-colors;
+  color: rgb(var(--brand-accent));
+}
+
+a:hover {
+  color: rgb(var(--brand-accentHover));
+}
+
+/* Vertikální mezery */
+section {
+  margin-bottom: 4rem;
+}
+
+/* =====================================
+   KARTY – moderní glass look
+   ===================================== */
+
+.card {
+  @apply rounded-2xl border bg-brand-surface dark:bg-brand-surfaceDark
+    border-brand-border dark:border-brand-borderDark;
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 16px 45px rgba(15, 23, 42, 0.18);
+}
+
+/* =====================================
+   TLAČÍTKA – luxusní styl jako Framer / Vercel
+   ===================================== */
+
+.btn-primary {
+  @apply inline-flex items-center justify-center
+    px-6 py-3 rounded-full font-medium text-white shadow-md
+    transition-all duration-200;
+
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.35);
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center
+    px-6 py-3 rounded-full font-medium border
+    transition-all duration-200;
+
+  color: #6366f1;
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
+.btn-secondary:hover {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: #6366f1;
+}
+
+/* =====================================
+   FORMY
+   ===================================== */
+
+input,
+textarea {
+  @apply w-full rounded-xl border px-4 py-3 text-sm transition-all
+    border-brand-border dark:border-brand-borderDark
+    bg-white/70 dark:bg-brand-surfaceDark/70;
+}
+
+input:focus,
+textarea:focus {
+  @apply outline-none border-brand-accent ring-2 ring-brand-accent/20;
+}
+
+/* =====================================
+   UTILITY – jemné animace
+   ===================================== */
+
+.fade-in {
+  animation: fadeIn 0.6s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+.input {
+  @apply w-full px-4 py-3 rounded-xl
+         bg-white/5 border border-white/15
+         text-white placeholder-slate-400
+         focus:outline-none focus:ring-2 focus:ring-brand-accent/40
+         transition;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.4s ease forwards;
 }

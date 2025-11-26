@@ -1,12 +1,15 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import Image from "next/image"
-import Link from "next/link"
+import { motion } from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import type { SanityProject } from "../lib/sanity";
 
-import type { SanityProject } from "../lib/types";
+type Props = {
+  project: SanityProject;
+};
 
-export default function ProjectCard({ project }: { project: SanityProject }) {
+export default function ProjectCard({ project }: Props) {
   return (
     <motion.div
       whileHover={{ y: -6, scale: 1.02 }}
@@ -27,18 +30,17 @@ export default function ProjectCard({ project }: { project: SanityProject }) {
           {project.title}
         </h4>
 
-        <p className="text-slate-400 text-sm mb-4">
-          {project.description}
-        </p>
+        <p className="text-slate-400 text-sm mb-4">{project.description}</p>
 
-        <Link
-           href={`/projekty/${project.slug?.current || ""}`}
-
-          className="text-indigo-400 hover:text-indigo-200 font-semibold"
-        >
-          Zobrazit více →
-        </Link>
+        {project.slug?.current && (
+          <Link
+            href={`/projekty/${project.slug.current}`}
+            className="text-indigo-400 hover:text-indigo-200 font-semibold"
+          >
+            Zobrazit více →
+          </Link>
+        )}
       </div>
     </motion.div>
-  )
+  );
 }

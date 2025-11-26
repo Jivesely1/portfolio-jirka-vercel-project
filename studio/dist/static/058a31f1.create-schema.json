@@ -1,0 +1,344 @@
+[
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              },
+              {
+                "flag": "min",
+                "constraint": 3
+              },
+              {
+                "flag": "max",
+                "constraint": 120
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "title",
+        "type": "string",
+        "title": "Název projektu"
+      },
+      {
+        "options": {
+          "source": "title",
+          "maxLength": 96
+        },
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "custom"
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "slug",
+        "type": "slug"
+      },
+      {
+        "name": "shortDescription",
+        "type": "string",
+        "title": "Stručný popis"
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "title": "Hlavní text – úvodní popis"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "mainImage",
+        "type": "image",
+        "title": "Hlavní obrázek"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "uri",
+                "constraint": {
+                  "options": {
+                    "scheme": [
+                      "/^http$/",
+                      "/^https$/"
+                    ],
+                    "allowRelative": false,
+                    "relativeOnly": false,
+                    "allowCredentials": false
+                  }
+                }
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "url",
+        "type": "url",
+        "title": "URL projektu"
+      },
+      {
+        "description": "Co bylo cílem projektu?",
+        "name": "goal",
+        "type": "text",
+        "title": "Cíl projektu"
+      },
+      {
+        "description": "Jednotlivé kroky projektu",
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "workflow",
+        "type": "array",
+        "title": "Proces / Workflow"
+      },
+      {
+        "name": "results",
+        "type": "text",
+        "title": "Výsledky projektu"
+      },
+      {
+        "description": "Přehled toho, co bylo v projektu realizováno",
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "features",
+        "type": "array",
+        "title": "Co jsem vytvořil / přínosy"
+      },
+      {
+        "options": {
+          "layout": "grid"
+        },
+        "of": [
+          {
+            "type": "image"
+          }
+        ],
+        "name": "gallery",
+        "type": "array",
+        "title": "Obrázková galerie"
+      },
+      {
+        "name": "client",
+        "type": "string",
+        "title": "Klient"
+      },
+      {
+        "name": "year",
+        "type": "number",
+        "title": "Rok projektu"
+      },
+      {
+        "description": "Nižší číslo = zobrazí se výše v seznamu",
+        "name": "order",
+        "type": "number",
+        "title": "Pořadí"
+      }
+    ],
+    "name": "project",
+    "type": "document",
+    "title": "Projekt"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              },
+              {
+                "flag": "min",
+                "constraint": 3
+              },
+              {
+                "flag": "max",
+                "constraint": 120
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "title",
+        "type": "string",
+        "title": "Název služby"
+      },
+      {
+        "name": "shortDescription",
+        "type": "string",
+        "title": "Krátký popis"
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "title": "Detailní popis"
+      },
+      {
+        "name": "icon",
+        "type": "string",
+        "title": "Ikona (emoji nebo název ikony)"
+      },
+      {
+        "name": "order",
+        "type": "number",
+        "title": "Pořadí"
+      }
+    ],
+    "name": "service",
+    "type": "document",
+    "title": "Služba"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "name",
+        "type": "string",
+        "title": "Jméno"
+      },
+      {
+        "name": "company",
+        "type": "string",
+        "title": "Firma"
+      },
+      {
+        "name": "role",
+        "type": "string",
+        "title": "Pozice"
+      },
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              },
+              {
+                "flag": "min",
+                "constraint": 10
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "quote",
+        "type": "text",
+        "title": "Text doporučení"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "avatar",
+        "type": "image",
+        "title": "Fotka / avatar"
+      },
+      {
+        "name": "order",
+        "type": "number",
+        "title": "Pořadí"
+      }
+    ],
+    "name": "testimonial",
+    "type": "document",
+    "title": "Reference / Testimonial"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              },
+              {
+                "flag": "min",
+                "constraint": 2
+              },
+              {
+                "flag": "max",
+                "constraint": 50
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "name",
+        "type": "string",
+        "title": "Název technologie"
+      },
+      {
+        "description": "Např. 💻, ⚛️, ☕",
+        "name": "emoji",
+        "type": "string"
+      },
+      {
+        "options": {
+          "list": [
+            {
+              "title": "Začátečník",
+              "value": "beginner"
+            },
+            {
+              "title": "Středně pokročilý",
+              "value": "intermediate"
+            },
+            {
+              "title": "Pokročilý",
+              "value": "advanced"
+            },
+            {
+              "title": "Expert",
+              "value": "expert"
+            }
+          ]
+        },
+        "name": "level",
+        "type": "string",
+        "title": "Úroveň"
+      },
+      {
+        "name": "order",
+        "type": "number",
+        "title": "Pořadí"
+      }
+    ],
+    "name": "skill",
+    "type": "document",
+    "title": "Technologie / Skill"
+  }
+]
